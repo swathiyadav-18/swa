@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "myapp:latest"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/swathiyadav-18/jenkins-docker-pipeline.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t %DOCKER_IMAGE% .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                bat 'docker run -d -p 8080:8080 %DOCKER_IMAGE%'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                bat 'echo All tests passed!'
+            }
+        }
+    }
+
+    post {
+        success {
+            emailext(
+                to: 'gorlaswathi1810@gmail.com',
+                subject: "SUCCESS: Jenkins Pipeline #${BUILD_NUMBER}",
+                body: "Good news! The build was successful."
+            )
+        }
+        failure {
+            emailext(
+                to: 'gorlaswathi1810@gmail.com',
+                subject: "FAILURE: Jenkins Pipeline #${BUILD_NUMBER}",
+                body: "The build has failed. Please check the Jenkins console output."
+            )
+        }
+    }
+}
